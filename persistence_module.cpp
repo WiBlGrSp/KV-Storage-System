@@ -18,6 +18,7 @@ static std::pair<std::string,std::string> deserilize(const std::string& kv_s)
 
 PersistenceModule::PersistenceModule(std::string file_path) {
     file_ = file_path;
+    
 }
 PersistenceModule::~PersistenceModule() {
 }
@@ -37,12 +38,11 @@ kvstore::DataMap PersistenceModule::load() {
     std::ifstream ifs;
     ifs.open(file_,std::ios::in);
     //从文件中逐行读取kv对
-    while(!ifs.eof())
+    std::string line;
+    while(std::getline(ifs,line))
     {
-        std::string buf;
-        std::getline(ifs,buf);
-        if(!buf.empty()){
-            auto [key,value] = deserilize(buf);
+        if(!line.empty()){
+            auto [key,value] = deserilize(line);
             result[key] = value;
         }
     }
