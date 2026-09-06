@@ -1,10 +1,6 @@
 #include "persistence_module.h"
-#include <csignal>
-#include <cstdio>
 #include <fstream>
-#include <memory>
 #include <string>
-#include <utility>
 //键值对序列化和反序列化
 static std::string serilize(const std::pair<std::string,std::string>& kv)
 {
@@ -25,18 +21,19 @@ PersistenceModule::PersistenceModule(std::string file_path) {
 }
 PersistenceModule::~PersistenceModule() {
 }
-void PersistenceModule::save(const std::shared_ptr<MemoryRepositry>& repos) {
+void PersistenceModule::save(const kvstore::DataMap& data_map){
+
     std::ofstream of;
     of.open(file_,std::ios::out | std::ios::trunc);
     //将repos中数据保存到磁盘文件中 每一行存储一个键值对 key:value\n
-    for(const auto&kv:repos->get_map())
+    for(const auto&kv:data_map)
     {
         of << serilize(kv) << '\n';
     }
     of.close();
 }
-std::shared_ptr<MemoryRepositry> PersistenceModule::load() {
-    std::shared_ptr<MemoryRepositry> repos = std::make_shared<MemoryRepositry>();
+kvstore::DataMap PersistenceModule::load() {
+    kvstore::DataMap result;
     std::ifstream ifs;
     ifs.open(file_,std::ios::in);
     //从文件中逐行读取kv对
@@ -46,9 +43,9 @@ std::shared_ptr<MemoryRepositry> PersistenceModule::load() {
         std::getline(ifs,buf);
         if(!buf.empty()){
             auto [key,value] = deserilize(buf);
-            repos->put(key,value);
+            result[key] = value;
         }
     }
     ifs.close();
-    return repos;
+    return result;
 }

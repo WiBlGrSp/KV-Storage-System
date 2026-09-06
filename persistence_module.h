@@ -1,9 +1,8 @@
 #pragma once
-#include <memory>
 #ifndef PERSISTENCE_MODULE_H
 #define PERSISTENCE_MODULE_H
 #include <fstream>
-#include "memory_repositry.h"
+#include"KV.h"
 class PersistenceModule
 {
 private:
@@ -11,7 +10,7 @@ private:
 public:
     PersistenceModule(std::string file_path);
     ~PersistenceModule();
-    void save(const std::shared_ptr<MemoryRepositry>& repos);
-    std::shared_ptr<MemoryRepositry> load();
+    void save(const kvstore::DataMap& data_map);
+    kvstore::DataMap load();
 };
 #endif //!PERSISTENCE_MODULE_H

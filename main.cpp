@@ -1,17 +1,13 @@
 #include <iostream>
 #include<string>
-#include"memory_repositry.h"
-#include"persistence_module.h"
-
+#include"KVStore.h"
 void log(const std::string&s)
 {
     std::cout << s << std::endl;
 }
 int main()
 {
-    PersistenceModule per("data.txt");
-    auto r = per.load();
-
+    KVStore s;
     std::string op;
     std::string key;
     std::string value;
@@ -27,7 +23,7 @@ int main()
         {
             std::cout << "[SYSTEM]input key"<< std::endl;
             std::cin >> key;
-            if (r->get(key,value))
+            if (s.get(key,value))
             {
                 std::cout << "value :" << value << std::endl;
             }else {
@@ -39,7 +35,7 @@ int main()
         {
             std::cout << "[SYSTEM]input key and value"<< std::endl;
             std::cin >> key >> value;
-            if (r->put(key,value))
+            if (s.put(key,value))
             {
             log("put success");
             }else {
@@ -49,7 +45,7 @@ int main()
         {
             std::cout << "[SYSTEM]input key"<< std::endl;
             std::cin >> key;
-            if (r->del(key))
+            if (s.del(key))
             {
                 log("delete success");
 
@@ -58,6 +54,5 @@ int main()
             }
         }
     };
-    per.save(r);
     return 0;
 }
