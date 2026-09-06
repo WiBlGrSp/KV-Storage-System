@@ -12,18 +12,18 @@ bool KVStore::get(const std::string&key,std::string&value)
 }
 bool KVStore::put(const std::string&key,const std::string&value)
 {
-    PersistenceModule per("wal.txt");
-    per.appendPut(key,value);
+    per_.appendPut(key,value);
     kv_map_[key] = value;
+    per_.autoCompact(kv_map_);
     return true;
 }
 bool KVStore::del(const std::string&key)
 {
     if(auto it = kv_map_.find(key);it!=kv_map_.end())   
     {
-        PersistenceModule per("wal.txt");
-        per.appendDel(key);
+        per_.appendDel(key);
         kv_map_.erase(key);
+        per_.autoCompact(kv_map_);
         return true;
     }
     else {
@@ -32,14 +32,12 @@ bool KVStore::del(const std::string&key)
 }
 void KVStore::restore() {
     // kv_map_ = PersistenceModule("data.txt").load();
-    kv_map_ = PersistenceModule("wal.txt").replay();
+    // kv_map_ = PersistenceModule("wal.txt").replay();
+    per_.restore(kv_map_);
 }
-void KVStore::snapshot() {
-    PersistenceModule("data.txt").save(kv_map_);
-}
-KVStore::KVStore() {
+
+KVStore::KVStore():per_("snapshot.txt","wal.txt") {
     restore();
 }
 KVStore::~KVStore() {
-    // snapshot();
 }

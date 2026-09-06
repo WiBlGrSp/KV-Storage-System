@@ -4,12 +4,15 @@
 #include<string>
 #include<map>
 #include"KV.h"
+#include"persistence_module.h"
 //顶层模块
 class KVStore
 {
 private:
     //红黑树存储键值对
     kvstore::DataMap kv_map_;
+    //持久化模块
+    PersistenceModule per_;
 public:
     KVStore();
     ~KVStore();
@@ -19,8 +22,7 @@ public:
     bool del(const std::string&key);
     //从快照中恢复
     void restore();
-    //写入磁盘快照
-    void snapshot();
+
 };
 
 
