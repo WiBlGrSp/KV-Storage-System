@@ -49,3 +49,44 @@ kvstore::DataMap PersistenceModule::load() {
     ifs.close();
     return result;
 }
+
+bool PersistenceModule::appendPut(const kvstore::Key& key ,const kvstore::Value& value) {
+
+    std::ofstream of;
+    of.open(file_,std::ios::out | std::ios::app);
+    of << "P:" << serilize({key,value}) << '\n'; 
+    of.close();
+    return true;
+}
+bool PersistenceModule::appendDel(const kvstore::Key& key) {
+    std::ofstream of;
+    of.open(file_,std::ios::out | std::ios::app);
+    of << "D:" << key << '\n'; 
+    of.close();
+    return true;
+}
+kvstore::DataMap PersistenceModule::replay() {
+    kvstore::DataMap result;
+    std::ifstream ifs;
+    ifs.open(file_,std::ios::in);
+    //从文件中逐行读取日志,重放日志
+    std::string line;
+    while(std::getline(ifs,line))
+    {
+        if(!line.empty()){
+            auto it = line.find(':');
+            std::string op = line.substr(0,it);
+            if(op == "P")
+            {
+                auto [key,value] = deserilize(line.substr(it+1));
+                result[key] = value;            
+            }else if(op == "D")
+            {
+                std::string key = line.substr(it+1);
+                result.erase(key);
+            }
+        }
+    }
+    ifs.close();
+    return result;
+}

@@ -12,5 +12,8 @@ public:
     ~PersistenceModule();
     void save(const kvstore::DataMap& data_map);
     kvstore::DataMap load();
+    bool appendPut(const kvstore::Key& key ,const kvstore::Value& value);
+    bool appendDel(const kvstore::Key& key);
+    kvstore::DataMap replay();  //重放日志
 };
 #endif //!PERSISTENCE_MODULE_H
