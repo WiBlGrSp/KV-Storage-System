@@ -5,7 +5,7 @@
 #include"KVStore.h"
 #include"KVStore.h"
 #include<netinet/in.h>
-
+#include"service.h"
 #define SER_PORT 8000
 #define SER_IP "192.168.42.131"
 /*
@@ -14,7 +14,7 @@
 class NetServer
 {
 private:
-    KVStore& store_;
+    Service &service_;
 private:
     //启动服务器
     void run();
@@ -25,7 +25,7 @@ private:
     void service(const std::string& request,std::string&response);
 
 public:
-    NetServer(KVStore& store):store_(store)
+    NetServer(Service &service):service_(service)
     {
         run();
     }
