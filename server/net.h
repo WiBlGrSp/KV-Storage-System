@@ -17,24 +17,6 @@ struct Request
 };
 
 //定义响应数据对象
-struct Response
-{
-    std::string msg_;
-    Response operator=(const Response&other)
-    {
-        this->msg_ = other.msg_;
-        return *this;
-    }
-    Response operator=(const char*str)
-    {
-        this->msg_ = str;
-        return *this;
-    }
-    Response operator=(const std::string&str)
-    {
-        this->msg_ = str;
-        return *this;
-    }
-};
+typedef std::string Response;
 
 #endif //!NET_H

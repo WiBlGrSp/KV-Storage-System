@@ -18,11 +18,8 @@ private:
 private:
     //启动服务器
     void run();
-
     //线程体函数,执行通信任务
     void task(int fd,sockaddr_in cin);
-    //数据解析+业务分发
-    void service(const std::string& request,std::string&response);
 
 public:
     NetServer(Service &service):service_(service)

@@ -64,12 +64,6 @@ void NetServer::run() {
     }
     close(sfd);
 }
-void NetServer::service(const std::string& request,std::string&response) 
-{
-
-   
-
-}
 void NetServer::task(int fd,sockaddr_in cin) {
     char buf[1024];
     while(true)
@@ -92,7 +86,7 @@ void NetServer::task(int fd,sockaddr_in cin) {
         service_.handle(req,  response);
 
         //响应数据
-        if(send(fd,response.msg_.c_str(),response.msg_.size(),0)==-1){
+        if(send(fd,response.c_str(),response.size(),0)==-1){
             perror("send error");
             break;
         }
