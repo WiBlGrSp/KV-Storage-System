@@ -8,9 +8,13 @@
 #include <unistd.h>
 #include<string>
 #include<cstring>
-#include <sstream>
 #include<thread>
 #include "service.h"
+//尝试从头解析命令,成功返回命令的结束索引,失败返回-1
+static size_t try_parse(const std::string&buf)
+{
+    return buf.find('\n');
+}
 NetServer::~NetServer() {
 }
 
@@ -65,7 +69,9 @@ void NetServer::run() {
     close(sfd);
 }
 void NetServer::task(int fd,sockaddr_in cin) {
+    
     char buf[1024];
+    std::string op_buf; //用于识别完整指令的缓冲区
     while(true)
     {
         //接收数据
@@ -78,19 +84,34 @@ void NetServer::task(int fd,sockaddr_in cin) {
         }else {
             printf("客户端发来消息:%s\n",buf);
         }
-        //数据解析
-        Request req;
-        Response response;
-        req.deserilize(std::string(buf)); 
-        //调用业务逻辑
-        service_.handle(req,  response);
+        op_buf.append(buf);
+        size_t op_end =0 ;
+        while(true)
+        {
+            //尝试解析命令
+            op_end = try_parse(op_buf);
+            if(op_end == std::string::npos)
+                break;
+            else
+            {
+                //数据解析
+                Request req;
+                Response response;
+                req.deserilize(op_buf.substr(0,op_end));
+                op_buf.erase(0,op_end+1); 
 
-        //响应数据
-        if(send(fd,response.c_str(),response.size(),0)==-1){
-            perror("send error");
-            break;
+                //调用业务逻辑
+                service_.handle(req,  response);
+
+                //响应数据
+                if(send(fd,response.c_str(),response.size(),0)==-1){
+                    perror("send error");
+                    break;
+                }
+                printf("send success");
+            }
         }
-        printf("send success");
+       
     }
     //关闭连接
     close(fd);

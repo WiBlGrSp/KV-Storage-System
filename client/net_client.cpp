@@ -44,7 +44,7 @@ void NetClient::run() {
         bzero(wbuf, sizeof(wbuf));
         //从终端获取数据
         fgets(wbuf, sizeof(wbuf), stdin);
-        wbuf[strlen(wbuf)-1] = 0; //将换行改成 '\0'
+        wbuf[strlen(wbuf)-1] = '\n'; //设定命令分割符
         //将数据发送给服务器
         if(send(cfd, wbuf, sizeof(wbuf), 0)==-1)
         {
