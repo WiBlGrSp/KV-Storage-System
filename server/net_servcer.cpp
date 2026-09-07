@@ -8,6 +8,7 @@
 #include<string>
 #include<cstring>
 #include <sstream>
+#include<thread>
 
 NetServer::~NetServer() {
 }
@@ -18,7 +19,6 @@ void NetServer::run() {
     if(sfd == -1){
         perror("socket error");
         return ;
-
     }
     printf("socket:%d\n",sfd);
     //设置端口快速重用
@@ -43,41 +43,24 @@ void NetServer::run() {
         return ;
     }
     printf("listen success\n");
-    //接收连接
-    struct sockaddr_in cin;
-    socklen_t newfd_len;
-    int new_fd = accept(sfd,(struct sockaddr*)&cin,&newfd_len);
-    if(new_fd == -1)
-    {
-        perror("accept error");
-        return;
-    }
-    printf("[%s:%d]:已连接成功!!!!\n", inet_ntoa(cin.sin_addr),ntohs(cin.sin_port));
-    char buf[1024];
+    //循环服务器
     while(true)
     {
-        //接收数据
-        bzero(buf,sizeof(buf));
-        int len = recv(new_fd,buf,sizeof(buf),0);
-        if(len == 0)
+        struct sockaddr_in cin;
+        socklen_t newfd_len;
+        int new_fd = accept(sfd,(struct sockaddr*)&cin,&newfd_len);
+        if(new_fd == -1)
         {
-            printf("对端[%s:%d]已经下线!",inet_ntoa(cin.sin_addr),ntohs(cin.sin_port));
-            break;
-        }else {
-            printf("客户端发来消息:%s\n",buf);
+            perror("accept error");
+            return;
         }
-    //调用业务逻辑
-        std::string result;
-        service(std::string(buf), result);
-    //响应数据
-        if(send(new_fd,result.c_str(),result.size(),0)==-1){
-            perror("send error");
-            break;
-        }
-        printf("send success");
+        printf("[%s:%d]:已连接成功!!!!\n", inet_ntoa(cin.sin_addr),ntohs(cin.sin_port));
+        //创建分支线程
+        std::thread th([this,new_fd,cin]{
+            task(new_fd,cin);
+        });
+        th.detach();
     }
-    //关闭连接
-    close(new_fd);
     close(sfd);
 }
 void NetServer::service(const std::string& request,std::string&response) 
@@ -139,4 +122,31 @@ void NetServer::service(const std::string& request,std::string&response)
         response = "请求不合法";
     }
 
+}
+void NetServer::task(int fd,sockaddr_in cin) {
+    char buf[1024];
+    while(true)
+    {
+        //接收数据
+        bzero(buf,sizeof(buf));
+        int len = recv(fd,buf,sizeof(buf),0);
+        if(len == 0)
+        {
+            printf("对端[%s:%d]已经下线!",inet_ntoa(cin.sin_addr),ntohs(cin.sin_port));
+            break;
+        }else {
+            printf("客户端发来消息:%s\n",buf);
+        }
+    //调用业务逻辑
+        std::string result;
+        service(std::string(buf), result);
+    //响应数据
+        if(send(fd,result.c_str(),result.size(),0)==-1){
+            perror("send error");
+            break;
+        }
+        printf("send success");
+    }
+    //关闭连接
+    close(fd);
 }

@@ -5,6 +5,7 @@
 #include<map>
 #include"KV.h"
 #include"persistence_module.h"
+#include<mutex>
 //顶层模块
 class KVStore
 {
@@ -13,6 +14,8 @@ private:
     kvstore::DataMap kv_map_;
     //持久化模块
     PersistenceModule per_;
+    //资源互斥锁
+    std::mutex mu_;
 public:
     KVStore();
     ~KVStore();

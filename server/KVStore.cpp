@@ -1,7 +1,9 @@
 #include"KVStore.h"
 #include "persistence_module.h"
+#include <mutex>
 bool KVStore::get(const std::string&key,std::string&value)
 {
+    std::lock_guard<std::mutex> lo(mu_);
     if(auto it = kv_map_.find(key);it!=kv_map_.end())
     {
         value =  kv_map_[key];
@@ -12,6 +14,7 @@ bool KVStore::get(const std::string&key,std::string&value)
 }
 bool KVStore::put(const std::string&key,const std::string&value)
 {
+    std::lock_guard<std::mutex> lo(mu_);
     per_.appendPut(key,value);
     kv_map_[key] = value;
     per_.autoCompact(kv_map_);
@@ -19,6 +22,7 @@ bool KVStore::put(const std::string&key,const std::string&value)
 }
 bool KVStore::del(const std::string&key)
 {
+    std::lock_guard<std::mutex> lo(mu_);
     if(auto it = kv_map_.find(key);it!=kv_map_.end())   
     {
         per_.appendDel(key);
