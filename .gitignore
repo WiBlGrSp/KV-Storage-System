@@ -67,7 +67,9 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+.vscode/
 
 # runtime data
 snapshot.txt
 wal.txt
+aof

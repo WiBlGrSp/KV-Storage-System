@@ -1,6 +1,7 @@
 #include"KVStore.h"
 #include "aof_persistence.h"
 #include <mutex>
+#include<iostream>
 bool KVStore::get(const std::string&key,std::string&value)
 {
     std::lock_guard<std::mutex> lo(mu_);
@@ -33,7 +34,13 @@ bool KVStore::del(const std::string&key)
     }
 }
 
-KVStore::KVStore():per_(kv_map_) {
+KVStore::KVStore():per_([this](std::ostream& os)->void{
+    for(const auto&[key,value] : kv_map_)
+    {
+        os << "P:" << key << ":" << value << "\n";
+    };
+}) 
+{
     per_.load(kv_map_);
     per_.chechEvent();
 }

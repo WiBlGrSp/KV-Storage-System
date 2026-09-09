@@ -1,15 +1,14 @@
 #pragma once
-#include <memory>
 #ifndef AOF_PERSISTENCE_H
 #define AOF_PERSISTENCE_H
 #include<string>
 #include<list>
 #include"KV.h"
 #include<mutex>
+#include<functional>
 class AOFPersistence
 {
 private:
-    DataMap* kv_map_;   //内存数据指针
     //aof文件名
     std::string aof_file_= "aof";
     std::string aof_tmp_file_ = "aof.tmp";
@@ -21,8 +20,10 @@ private:
     std::mutex mu_;    //保护aof文件和缓冲区的锁
     unsigned long aof_base_size=0;    //aof文件上次重写记录数
     unsigned long aof_cur_size=0;     //aof文件当前记录数
+    std::function<void(std::ostream&)> dump_func_;
 public:
-    AOFPersistence(DataMap&kv_map);
+    explicit AOFPersistence(std::function<void(std::ostream&)> dump_func);
+    AOFPersistence();
     ~AOFPersistence();
     //写入日志
     bool appendPut(const Key& key ,const Value& value);
@@ -30,7 +31,7 @@ public:
     //同步aof_buf-->aof
     bool sync();
     //重写aof
-    bool rewrite(const DataMap&data_map);
+    bool rewrite(const std::function<void(std::ostream&)>dump_snapshot);
     //将aof_rewrite_buf写入临时AOF文件
     void rewriteBuf();
     //重放aof-->内存

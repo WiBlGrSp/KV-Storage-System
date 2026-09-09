@@ -2,9 +2,7 @@
 #ifndef KVSTORE_H
 #define KVSTORE_H
 #include<string>
-#include<map>
 #include"KV.h"
-#include"persistence_module.h"
 #include"aof_persistence.h"
 #include<mutex>
 //顶层模块

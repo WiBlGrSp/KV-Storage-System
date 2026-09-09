@@ -1,7 +1,9 @@
 
 #include "aof_persistence.h"
+#include <functional>
 #include <mutex>
 #include<fstream>
+#include <ostream>
 #include <thread>
 #include<unistd.h>
 #include <sys/wait.h>
@@ -53,7 +55,7 @@ bool AOFPersistence::sync() {
     return true;
 }
 
-bool AOFPersistence::rewrite(const DataMap&data_map) {
+bool AOFPersistence::rewrite(const std::function<void(std::ostream&)>dump_snapshot) {
     //开启aof_write_buf_
     is_rewritting_ = true;
     //创建子进程写新AOF日志
@@ -65,10 +67,7 @@ bool AOFPersistence::rewrite(const DataMap&data_map) {
         ofs.open(aof_tmp_file_,std::ios::out|std::ios::trunc);
 
         //内存数据写入临时AOF文件
-        for(auto kv:data_map)
-        {
-            ofs << "P:" << serilize(kv) << "\n";
-        }
+        dump_snapshot(ofs);
         ofs.flush();
         ofs.close();
         //退出子进程,通知主进程
@@ -133,7 +132,7 @@ void AOFPersistence::rewriteBuf() {
     //记录aof文件大小
     aof_base_size = aof_cur_size; 
 }
-AOFPersistence::AOFPersistence(DataMap&kv_map):kv_map_(&kv_map) {
+AOFPersistence::AOFPersistence(){
 }
 AOFPersistence::~AOFPersistence() {
 
@@ -145,7 +144,7 @@ void AOFPersistence::chechEvent() {
             sleep(1);
             if(!is_rewritting_ && aof_cur_size-aof_base_size*1.5>0 && aof_base_size>5)
             {
-                rewrite(*kv_map_);
+                rewrite(dump_func_);
             }
             pid_t pid = waitpid(-1,NULL,WNOHANG);
             if(pid >0 )
@@ -155,4 +154,8 @@ void AOFPersistence::chechEvent() {
         }
     });
     th.detach();
+}
+AOFPersistence::AOFPersistence(std::function<void(std::ostream&)> dump_func):dump_func_(dump_func)
+{
+
 }
