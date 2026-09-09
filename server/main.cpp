@@ -1,12 +1,10 @@
 
 #include"KVStore.h"
 #include"net_servcer.h"
-#include "service.h"
 
 int main()
 {
     KVStore store;
-    Service service(store);
-    NetServer server(service);
+    NetServer server(store);
     return 0;
 }

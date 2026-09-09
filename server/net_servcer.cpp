@@ -1,5 +1,4 @@
 #include "net_servcer.h"
-#include "net.h"
 #include <cstdio>
 #include <sys/types.h> 
 #include <sys/socket.h>
@@ -9,7 +8,9 @@
 #include<string>
 #include<cstring>
 #include<thread>
-#include "service.h"
+
+#include "net.h"
+
 //尝试从头解析命令,成功返回命令的结束索引,失败返回-1
 static size_t try_parse(const std::string&buf)
 {
@@ -101,7 +102,7 @@ void NetServer::task(int fd,sockaddr_in cin) {
                 op_buf.erase(0,op_end+1); 
 
                 //调用业务逻辑
-                service_.handle(req,  response);
+                this->clientHandler(req,  response);
 
                 //响应数据
                 if(send(fd,response.c_str(),response.size(),0)==-1){
@@ -115,4 +116,60 @@ void NetServer::task(int fd,sockaddr_in cin) {
     }
     //关闭连接
     close(fd);
+}
+
+void NetServer::clientHandler(const Request &request,Response &response) 
+{
+    std::string op=request.op_;
+    std::string key=request.key_;
+    std::string value=request.value_;
+
+    //业务分发
+
+    if(op == "quit")
+    {
+        response = "server quit";
+    }else
+    if(op == "get")
+    {
+        if(key.empty() )
+        {
+            response = "key empty error";
+        }else
+        if (store_.get(key,value))
+        {
+            response = "value:" + value;
+        }else {
+            response = "key:"+key +" not found";
+        }
+        
+    }
+    else if (op == "put")
+    {
+        if(key.empty() || value.empty())
+        {
+            response = "key or value empty error";
+        }else
+        if (store_.put(key,value))
+        {
+            response = "put success";
+        }else {
+            response= "put error";
+        }
+    }else if(op == "del")
+    {
+        if(key.empty())
+        {
+            response = "key empty error";
+        }else
+        if (store_.del(key))
+        {
+            response = "delete success";
+
+        }else {
+            response = "delete error";
+        }
+    }else {
+        response = "请求不合法";
+    }
 }
