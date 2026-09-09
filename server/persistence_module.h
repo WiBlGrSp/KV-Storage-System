@@ -15,21 +15,21 @@ public:
     PersistenceModule(const std::string snapshot_file,const std::string &wal_file);
     ~PersistenceModule();
     //将内存数据保存到快照中
-    void save(const kvstore::DataMap& data_map);
+    void save(const DataMap& data_map);
 
-    bool appendPut(const kvstore::Key& key ,const kvstore::Value& value);
-    bool appendDel(const kvstore::Key& key);
+    bool appendPut(const Key& key ,const Value& value);
+    bool appendDel(const Key& key);
     //从快照和日志中恢复数据
-    void restore(kvstore::DataMap&data_map);
+    void restore(DataMap&data_map);
     //将日志压缩到快照中
-    void compact(const kvstore::DataMap&data_map);
-    void autoCompact(const kvstore::DataMap&data_map);
+    void compact(const DataMap&data_map);
+    void autoCompact(const DataMap&data_map);
 
 private:
     //加载快照
-    void load(kvstore::DataMap&data_map);
+    void load(DataMap&data_map);
     //重放日志
-    void replay(kvstore::DataMap&data_map);
+    void replay(DataMap&data_map);
     //清空日志文件
     void clearWal();
     //自动更新

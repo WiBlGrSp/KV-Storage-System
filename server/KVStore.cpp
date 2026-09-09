@@ -1,5 +1,5 @@
 #include"KVStore.h"
-#include "persistence_module.h"
+#include "aof_persistence.h"
 #include <mutex>
 bool KVStore::get(const std::string&key,std::string&value)
 {
@@ -17,7 +17,6 @@ bool KVStore::put(const std::string&key,const std::string&value)
     std::lock_guard<std::mutex> lo(mu_);
     per_.appendPut(key,value);
     kv_map_[key] = value;
-    per_.autoCompact(kv_map_);
     return true;
 }
 bool KVStore::del(const std::string&key)
@@ -27,21 +26,16 @@ bool KVStore::del(const std::string&key)
     {
         per_.appendDel(key);
         kv_map_.erase(key);
-        per_.autoCompact(kv_map_);
         return true;
     }
     else {
         return false;
     }
 }
-void KVStore::restore() {
-    // kv_map_ = PersistenceModule("data.txt").load();
-    // kv_map_ = PersistenceModule("wal.txt").replay();
-    per_.restore(kv_map_);
-}
 
-KVStore::KVStore():per_("snapshot.txt","wal.txt") {
-    restore();
+KVStore::KVStore():per_(kv_map_) {
+    per_.load(kv_map_);
+    per_.chechEvent();
 }
 KVStore::~KVStore() {
 }
