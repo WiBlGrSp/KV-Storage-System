@@ -33,7 +33,7 @@ void NetServer::run() {
     //绑定ip和端口
     struct sockaddr_in sin;
     sin.sin_family = AF_INET; //通信域
-    sin.sin_port = htons(SER_PORT); //端口号
+    sin.sin_port = htons(ser_port_); //端口号
     sin.sin_addr.s_addr = inet_addr(SER_IP); //ip地址
     socklen_t sin_len = sizeof(sin);
     int res = bind(sfd,(struct sockaddr*)&sin,sin_len);
@@ -102,7 +102,13 @@ void NetServer::task(int fd,sockaddr_in cin) {
                 op_buf.erase(0,op_end+1); 
 
                 //调用业务逻辑
-                this->clientHandler(req,  response);
+                if(role_ == "master")
+                {
+                    this->clientHandler(req,  response);
+                }else if(role_=="slave")
+                {
+                    this->clientHandlerSlave(req,response);
+                }
 
                 //响应数据
                 if(send(fd,response.c_str(),response.size(),0)==-1){
@@ -132,7 +138,7 @@ void NetServer::clientHandler(const Request &request,Response &response)
     }else
     if(op == "get")
     {
-        if(key.empty() )
+        if(key.empty())
         {
             response = "key empty error";
         }else
@@ -169,6 +175,40 @@ void NetServer::clientHandler(const Request &request,Response &response)
         }else {
             response = "delete error";
         }
+    }else {
+        response = "请求不合法";
+    }
+}
+
+void NetServer::clientHandlerSlave(const Request &request,Response &response) 
+{
+    std::string op=request.op_;
+    std::string key=request.key_;
+    std::string value=request.value_;
+
+    //业务分发
+
+    if(op == "quit")
+    {
+        response = "server quit";
+    }else
+    if(op == "get")
+    {
+        if(key.empty())
+        {
+            response = "key empty error";
+        }else
+        if (store_.get(key,value))
+        {
+            response = "value:" + value;
+        }else {
+            response = "key:"+key +" not found";
+        }
+        
+    }
+    else if (op == "put" || op == "del")
+    {
+        response = "I'm slave,can't modify data,please access the master!";
     }else {
         response = "请求不合法";
     }
