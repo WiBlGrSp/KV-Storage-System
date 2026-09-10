@@ -6,7 +6,9 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include<cstring>
-
+#include"communication.h"
+#include "protocol.h"
+#include<iostream>
 NetClient::NetClient() {
     run();
 }
@@ -37,29 +39,29 @@ void NetClient::run() {
     }
     printf("连接服务器成功\n");
     //4、数据收发
-    char wbuf[128] = "";
+    Communication com(cfd,SER_IP,SER_PORT);
     while(true)
     {
-        //清空容器
-        bzero(wbuf, sizeof(wbuf));
-        //从终端获取数据
-        fgets(wbuf, sizeof(wbuf), stdin);
-        wbuf[strlen(wbuf)-1] = '\n'; //设定命令分割符
-        //将数据发送给服务器
-        if(send(cfd, wbuf, sizeof(wbuf), 0)==-1)
-        {
-            perror("send error");
-            return ;
-        }
+        std::string code;
+        std::string arg;
+        std::cin >> code;
+        std::getline(std::cin,arg);
+        Msg msg;
+        msg.code_ = code;
+        msg.content_ = arg;
+        std::string req ;
+        msg.serilize(req);
+        com.Send(req);
         //接受服务器发送过来的消息
-        if(recv(cfd, wbuf, sizeof(wbuf), 0)==0)
+        std::string res;
+        if(com.Recv(res)==0)
         {
-            printf("对端已经下线\n");
-        break;
+            printf("服务端下线\n");
+            break;
+        }else {
+            printf("服务端发送消息为:%s\n",res.c_str());
         }
-            printf("收到服务器消息为：%s\n", wbuf);
     }
-    //5、关闭套接字
-    close(cfd);
+
     return;	
 }

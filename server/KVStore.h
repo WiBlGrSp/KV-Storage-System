@@ -23,8 +23,8 @@ public:
     bool get(const std::string&key,std::string&value);
     bool put(const std::string&key,const std::string&value);
     bool del(const std::string&key);
-
-
+    //创建快照
+    void createSnapshot(std::string&snapshot);
 };
 
 

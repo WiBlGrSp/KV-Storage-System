@@ -46,3 +46,11 @@ KVStore::KVStore():per_([this](std::ostream& os)->void{
 }
 KVStore::~KVStore() {
 }
+
+void KVStore::createSnapshot(std::string&snapshot) {
+    std::lock_guard<std::mutex> lo(mu_);
+    for(const auto&[key,value] : kv_map_)
+    {
+        snapshot.append("P:"+key+ ":" + value + "\n");
+    };
+}
